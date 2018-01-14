@@ -5,7 +5,7 @@
 #include "cinder/GeomIo.h"
 #include "cinder/CameraUi.h"
 #include "cinder/Camera.h"
-
+#include "cinder/params/Params.h"
 #include "CiSpoutOut.h"
 
 using namespace ci;
@@ -29,6 +29,12 @@ public:
 	CameraUi		mCameraUi;
 
 	SpoutOut mSpoutOut;
+private:
+	gl::QueryTimeSwappedRef mGpuTimer;
+	Timer					mCpuTimer;
+	float					mAverageGpuTime = 0.0f;
+	float					mAverageCpuTime = 0.0f;
+	params::InterfaceGlRef	mParams;
 };
 void VideodrommSimpleApp::prepare(Settings *settings)
 {
@@ -39,10 +45,17 @@ VideodrommSimpleApp::VideodrommSimpleApp()
 	: mCameraUi(&mCamera)
 	, mSpoutOut("videodromm simple", app::getWindowSize())
 {
+	mGpuTimer = gl::QueryTimeSwapped::create();
+	gl::enableVerticalSync();
+
 	auto geometry = geom::Teapot() >> geom::Scale(vec3(10));
 	mBatch = gl::Batch::create(geometry, gl::getStockShader(gl::ShaderDef().lambert()));
 
 	gl::enableDepth();
+	mParams = params::InterfaceGl::create("Motion Blur Options", ivec2(250, 300));
+	mParams->addParam("Average GPU Draw (ms)", &mAverageGpuTime);
+	mParams->addParam("Average CPU Draw (ms)", &mAverageCpuTime);
+
 }
 
 void VideodrommSimpleApp::mouseDrag(MouseEvent event)
@@ -66,11 +79,19 @@ void VideodrommSimpleApp::update()
 
 void VideodrommSimpleApp::draw()
 {
+	mGpuTimer->begin();
+	mCpuTimer.start();
 	gl::clear(Color(0, 0, 0));
 	gl::setMatrices(mCamera);
 	mBatch->draw();
+	mCpuTimer.stop();
+	mGpuTimer->end();
+
+	mAverageCpuTime = (mCpuTimer.getSeconds() * 200) + mAverageCpuTime * 0.8f;
+	mAverageGpuTime = mGpuTimer->getElapsedMilliseconds() * 0.2f + mAverageGpuTime * 0.8f;
 
 	mSpoutOut.sendViewport();
+	mParams->draw();
 }
 
 void VideodrommSimpleApp::resize()
