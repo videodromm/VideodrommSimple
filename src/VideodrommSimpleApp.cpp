@@ -5,6 +5,8 @@
 #include "cinder/GeomIo.h"
 #include "cinder/CameraUi.h"
 #include "cinder/Camera.h"
+#include "cinder/Log.h"
+#include "cinder/Utilities.h"
 #include "cinder/params/Params.h"
 #include "CiSpoutOut.h"
 
@@ -48,14 +50,13 @@ VideodrommSimpleApp::VideodrommSimpleApp()
 	mGpuTimer = gl::QueryTimeSwapped::create();
 	gl::enableVerticalSync();
 
-	auto geometry = geom::Teapot() >> geom::Scale(vec3(10));
+	auto geometry = geom::RoundedRect() >> geom::Scale(vec3(10));
 	mBatch = gl::Batch::create(geometry, gl::getStockShader(gl::ShaderDef().lambert()));
 
 	gl::enableDepth();
-	mParams = params::InterfaceGl::create("Motion Blur Options", ivec2(250, 300));
+	mParams = params::InterfaceGl::create("Options", ivec2(260, 50));
 	mParams->addParam("Average GPU Draw (ms)", &mAverageGpuTime);
 	mParams->addParam("Average CPU Draw (ms)", &mAverageCpuTime);
-
 }
 
 void VideodrommSimpleApp::mouseDrag(MouseEvent event)
@@ -75,6 +76,7 @@ void VideodrommSimpleApp::mouseUp(MouseEvent event)
 
 void VideodrommSimpleApp::update()
 {
+	getWindow()->setTitle("(" + toString( (int)getAverageFps() ) + " fps) Videodromm");
 }
 
 void VideodrommSimpleApp::draw()
