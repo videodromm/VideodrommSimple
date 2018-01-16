@@ -37,6 +37,9 @@ private:
 	float					mAverageGpuTime = 0.0f;
 	float					mAverageCpuTime = 0.0f;
 	params::InterfaceGlRef	mParams;
+	gl::GlslProgRef			mGlslProg;
+	void					drawContent();
+
 };
 void VideodrommSimpleApp::prepare(Settings *settings)
 {
@@ -50,15 +53,29 @@ VideodrommSimpleApp::VideodrommSimpleApp()
 	mGpuTimer = gl::QueryTimeSwapped::create();
 	gl::enableVerticalSync();
 
-	auto geometry = geom::RoundedRect() >> geom::Scale(vec3(10));
+	auto geometry = geom::Icosahedron() >> geom::Scale(vec3(10));
 	mBatch = gl::Batch::create(geometry, gl::getStockShader(gl::ShaderDef().lambert()));
 
 	gl::enableDepth();
 	mParams = params::InterfaceGl::create("Options", ivec2(260, 50));
 	mParams->addParam("Average GPU Draw (ms)", &mAverageGpuTime);
 	mParams->addParam("Average CPU Draw (ms)", &mAverageCpuTime);
-}
 
+	mGlslProg = gl::GlslProg::create(gl::GlslProg::Format().vertex(loadAsset("passthrough.vs"))
+		.fragment(loadAsset("hexler330.glsl")));
+}
+void VideodrommSimpleApp::drawContent()
+{
+	// gl::ScopedTextureBind colorTex(mGBuffer->getTexture2d(G_COLOR), 0);
+	gl::ScopedGlslProg prog(mGlslProg);
+	gl::ScopedBlendPremult blend;
+
+	mGlslProg->uniform("iGlobalTime", (float)getElapsedSeconds());
+	mGlslProg->uniform("iResolution", vec3(640.0, 480.0, 1.0));
+	
+
+	gl::drawSolidRect(getWindowBounds());
+}
 void VideodrommSimpleApp::mouseDrag(MouseEvent event)
 {
 	mCameraUi.mouseDrag(event);
@@ -85,6 +102,7 @@ void VideodrommSimpleApp::draw()
 	mCpuTimer.start();
 	gl::clear(Color(0, 0, 0));
 	gl::setMatrices(mCamera);
+	drawContent();
 	mBatch->draw();
 	mCpuTimer.stop();
 	mGpuTimer->end();
