@@ -21,6 +21,7 @@ public:
 	void mouseDrag(MouseEvent event) override;
 	void mouseDown(MouseEvent event) override;
 	void mouseUp(MouseEvent event) override;
+	void keyDown(KeyEvent event) override;
 	void update() override;
 	void draw() override;
 	void resize() override;
@@ -63,6 +64,32 @@ VideodrommSimpleApp::VideodrommSimpleApp()
 
 	mGlslProg = gl::GlslProg::create(gl::GlslProg::Format().vertex(loadAsset("passthrough.vs"))
 		.fragment(loadAsset("hexler330.glsl")));
+}
+void VideodrommSimpleApp::keyDown(KeyEvent event)
+{
+	switch (event.getCode()) {
+
+	case KeyEvent::KEY_1: mBatch->replaceVboMesh(gl::VboMesh::create(geom::Cube())); break;
+	case KeyEvent::KEY_2: mBatch->replaceVboMesh(gl::VboMesh::create(geom::Icosahedron())); break;
+	case KeyEvent::KEY_3: mBatch->replaceVboMesh(gl::VboMesh::create(geom::Sphere())); break;
+	case KeyEvent::KEY_4: mBatch->replaceVboMesh(gl::VboMesh::create(geom::Icosphere())); break;
+	case KeyEvent::KEY_5: mBatch->replaceVboMesh(gl::VboMesh::create(geom::Cylinder())); break;
+	case KeyEvent::KEY_6: mBatch->replaceVboMesh(gl::VboMesh::create(geom::Torus())); break;
+	case KeyEvent::KEY_7: mBatch->replaceVboMesh(gl::VboMesh::create(geom::TorusKnot())); break;
+	case KeyEvent::KEY_PAGEUP: mCamera.setEyePoint(vec3(mCamera.getEyePoint().x + 0.1f, mCamera.getEyePoint().y, mCamera.getEyePoint().z + 0.1f)); break;
+	case KeyEvent::KEY_PAGEDOWN: mCamera.setEyePoint(vec3(mCamera.getEyePoint().x - 0.1f, mCamera.getEyePoint().y, mCamera.getEyePoint().z - 0.1f)); break;
+
+
+	case KeyEvent::KEY_ESCAPE:
+		// quit the application
+		quit();
+		break;
+	case KeyEvent::KEY_f:
+		// toggle full screen
+		setFullScreen(!isFullScreen());
+		break;
+	}
+
 }
 void VideodrommSimpleApp::drawContent()
 {
